@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pymongo
+
 # Define your item pipelines here
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
@@ -7,7 +8,6 @@ import pymongo
 
 
 class SpiderPipeline(object):
-    collection_name = 'scrapy_items'
 
     def __init__(self, mongo_uri, mongo_db, mongo_user, mongo_password):
         self.mongo_uri = mongo_uri
@@ -32,6 +32,8 @@ class SpiderPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        self.db[self.collection_name].insert_one(dict(item))
+        # 使用spider的名字作为 collection名字
+        collection_name = spider.name
+        self.db[spider.name].insert_one(dict(item))
         return item
 
