@@ -34,6 +34,6 @@ class SpiderPipeline(object):
     def process_item(self, item, spider):
         # 使用spider的名字作为 collection名字
         collection_name = spider.name
-        self.db[spider.name].insert_one(dict(item))
+        self.db[collection_name].insert_one(dict(item))
         return item
 
