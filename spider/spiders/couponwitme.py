@@ -4,65 +4,68 @@ import scrapy
 class CouponwitmeSpider(scrapy.Spider):
     name="couponwitme"
     allow_domains=["couponwitme.com"]
+    root_url = "https://www.couponwitme.com"
 
     def start_requests(self):
         urls = []
-        for item in range(65, 91):
-            url = "https://www.couponwitme.com/stores/"+ chr(item) + "/"
+        for item in range(97, 122):
+            url = self.root_url + "/stores/"+ chr(item) + "/"
             urls.append(url)
-        urls.append("https://www.couponwitme.com/stores/Other/")
+        urls.append(self.root_url + "/stores/other/")
 
         # store页面列表
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
         # 类别页面列表
-        url = "https://www.couponwitme.com/categories/"
+        url = self.root_url + "/category/"
         yield scrapy.Request(url=url, callback=self.parse_all_category)
 
     def parse(self, response):
         # 爬虫分发
-        # 直接到内容页
-        for url in response.xpath('//*[@class="all_stores"]/ul[@class="storeslist"]/li/a/@href').extract():
+        for url in response.xpath('//*[@class="letter"]/ul/li/a/@href').extract():
             yield response.follow(url, self.parse_term)
-        # 类别页
-        for url in response.xpath('//*[@id="left"]/ul[@id="category"]/li/a/@href').extract():
-            yield response.follow(url, self.parse_category)
 
     def parse_term(self, response):
         #coupon list
         coupon_list = []
-        for coupon_block in response.xpath('//*[@id="coupon_list"]//div[contains(@class, "coupon_block")]'):
+        for coupon_block in response.xpath('//ul[contains(@class, "coupon")]/li'):
             coupon = {
-                'id': coupon_block.xpath('.//a[contains(@id, "divcover_")]/@id').extract_first().split("_")[1],
-                'title': coupon_block.xpath('.//p[contains(@class, "coupon_title")]/a/text()').extract_first(),
-                'description': coupon_block.xpath('.//span[contains(@class, "cpdesc")]/text()').extract_first(),
-                'restriction': coupon_block.xpath('.//span[contains(@class, "coupon_restriction")]/text()').extract_first(),
-                'code': coupon_block.xpath('.//span[contains(@class, "coupon_code")]/text()').extract_first(),
-                'dst_url': coupon_block.xpath('.//a[contains(@id, "divcover_")]/@href').extract_first(),
-                'expire_time': coupon_block.xpath('.//div[contains(@class, "coupon_infor")]/p[last()]/text()').extract_first(),
-                'click_count': coupon_block.xpath('.//*[contains(@class, "click")]/text()').extract_first(),
+                'id': coupon_block.xpath('.//div[contains(@class, "offer")]/a/@data-info').extract_first().split("-")[0],
+                'title': coupon_block.xpath('.//p[contains(@class, "c_title")]/a/text()').extract_first(),
+                'description': coupon_block.xpath('.//span[contains(@class, "des")]/text()').extract_first(),
+                'code': coupon_block.xpath('.//div[contains(@class, "show_code")]/a/code/text()').extract_first(),
+                'dst_url': coupon_block.xpath('.//div[contains(@class, "show_code")]/a/@href').extract_first(),
+                'promo_detail': ' '.join(coupon_block.xpath('.//div[contains(@class, "offer")]/a/*/text()').extract())
             }
             coupon_list.append(coupon)
 
-        # data
+        # term data
         yield {
             'h1': response.xpath('//h1/text()').extract_first(),
-            'dst_url': response.xpath('//*[@id="store_screen"]/a/@href').extract_first(),
-            'request_path': response.url,
-            'img': response.xpath('//*[@id="store_screen"]/a/img/@src').extract_first(),
+            'name': response.xpath('//div[contains(@class, "shop-at-link-container")]/a/@title').extract_first(),
+            'dst_url': response.xpath('//*[@class="term_info"]/a/@href').extract_first(),
+            'request_path': response.url.replace(self.root_url, ""),
+            'img': response.xpath('//*[@class="term_info"]/a/img/@src').extract_first(),
+            'categories': '->'.join(response.xpath('//*[@class="breadcrumbs"]/div/a/span/text()').extract()[1:]),
+            'desc': response.xpath('//*[contains(@class, "store_de")]/text()').extract_first(),
             'coupon_list': coupon_list
         }
 
         # 获取 Related Stores Popular Stores链接
-        for url in response.xpath('//*[@id="category"]/li/a/@href').extract():
-            if url.startswith('/vouchers'):
-                yield response.follow(url, self.parse_term)
+        for url in response.xpath('//*[contains(@class, "newstore_list")]/a/@href').extract():
+            yield response.follow(url, self.parse_term)
+
+        # 获取category页面
+        for url in response.xpath("//div[contains(@class, 'cate_list')]/a/@href").extract():
+            yield response.follow(url, self.parse_category)
 
     def parse_category(self, response):
-        for url in response.xpath('//*[contains(@class, "coupon_list")]/div[contains(@class, "coupon_block")]/div[contains(@class, "merchant_img")]/a/@href').extract():
+        for url in response.xpath("//*[contains(@class, 'storelist')]/ul/li/a/@href").extract():
             yield response.follow(url, self.parse_term)
 
     def parse_all_category(self, response):
-        for url in response.xpath('//*[contains(@class, "categories_all")]//a/@href').extract():
-            yield response.follow(url, self.parse_category)
+        for category_block in response.xpath('//*[contains(@class, "letter")]/ul').extract():
+            yield response.follow(category_block.xpath('.//div[contains(@class, "one_letter")]/a/@href'), self.parse_category)
+            for url in category_block.xpath('.//li/a/@href').extract():
+                yield response.follow(url, self.parse_category)
