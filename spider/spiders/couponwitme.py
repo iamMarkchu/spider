@@ -29,14 +29,14 @@ class CouponwitmeSpider(scrapy.Spider):
     def parse_term(self, response):
         #coupon list
         coupon_list = []
-        for coupon_block in response.xpath('//ul[contains(@class, "coupon")]/li'):
+        for coupon_block in response.xpath('//ul[contains(@class, "c_list")]/li'):
             coupon = {
-                'id': coupon_block.xpath('.//div[contains(@class, "offer")]/a/@data-info').extract_first().split("-")[0],
+                'id': coupon_block.xpath('./@data-id').extract_first(),
                 'title': coupon_block.xpath('.//p[contains(@class, "c_title")]/a/text()').extract_first(),
-                'description': coupon_block.xpath('.//span[contains(@class, "des")]/text()').extract_first(),
+                'description': coupon_block.xpath('.//div[contains(@class, "des")]/text()').extract_first(),
                 'code': coupon_block.xpath('.//div[contains(@class, "show_code")]/a/code/text()').extract_first(),
                 'dst_url': coupon_block.xpath('.//div[contains(@class, "show_code")]/a/@href').extract_first(),
-                'promo_detail': ' '.join(coupon_block.xpath('.//div[contains(@class, "offer")]/a/*/text()').extract())
+                'promo_detail': ' '.join(coupon_block.xpath('.//div[contains(@class, "promo_infor_center")]/span/text()').extract())
             }
             coupon_list.append(coupon)
 
@@ -47,8 +47,8 @@ class CouponwitmeSpider(scrapy.Spider):
             'dst_url': response.xpath('//*[@class="term_info"]/a/@href').extract_first(),
             'request_path': response.url.replace(self.root_url, ""),
             'img': response.xpath('//*[@class="term_info"]/a/img/@src').extract_first(),
-            'categories': '->'.join(response.xpath('//*[@class="breadcrumbs"]/div/a/span/text()').extract()[1:]),
-            'desc': response.xpath('//*[contains(@class, "store_de")]/text()').extract_first(),
+            'categories': '->'.join(response.xpath('//*[contains(@class,"breadcrumbs")]/a/text()').extract()[1:]),
+            'desc': response.xpath('//*[contains(@class, "store_de")]').extract_first(),
             'coupon_list': coupon_list
         }
 
