@@ -52,9 +52,9 @@ DOWNLOAD_DELAY = 0.25
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'spider.middlewares.SpiderDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   'spider.middlewares.MeiZiTu': 543,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
@@ -65,7 +65,7 @@ DOWNLOAD_DELAY = 0.25
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   # 'spider.pipelines.SpiderPipeline': 300,
+   'spider.pipelines.MzituImagePipeline': 1,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -92,3 +92,5 @@ ITEM_PIPELINES = {
 # MONGO_DATABASE= 'items'
 # MONGO_USER='homestead'
 # MONGO_PASSWORD='secret'
+
+IMAGES_STORE='/tmp/mzitu'

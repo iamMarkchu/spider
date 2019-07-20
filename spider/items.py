@@ -12,3 +12,14 @@ class SpiderItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
+
+
+class MzituItem(scrapy.Item):
+    tid = scrapy.Field()
+    order = scrapy.Field()
+    img_url = scrapy.Field()
+    title = scrapy.Field()
+    time = scrapy.Field()
+    category = scrapy.Field()
+    tags = scrapy.Field()
+    image_paths = scrapy.Field()

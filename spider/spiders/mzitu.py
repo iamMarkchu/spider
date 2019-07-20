@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
 
+from spider.items import MzituItem
+
 
 class MzituSpider(scrapy.Spider):
     name = 'mzitu'
@@ -21,14 +23,12 @@ class MzituSpider(scrapy.Spider):
             last_page = response.xpath('//*[contains(@class, "pagenavi")]/a[last()-1]/span/text()').extract_first()
             for index in range(2, int(last_page)):
                 yield response.follow(response.url + "/" + str(index), self.parse_detail)
-
-        yield {
-            'tid': response.url.split('/')[3],
-            'order': response.url.split('/')[4] if not is_default_page else 1,
-            'img_url': response.xpath('//*[contains(@class, "main-image")]/p/a/img/@src').extract_first(),
-            'title': response.xpath('//h2[contains(@class, "main-title")]/text()').extract_first(),
-            'time': response.xpath('//*[contains(@class, "main-meta")]/span[2]/text()').extract_first().replace('发布于 ',
-                                                                                                                ''),
-            'category': response.xpath('//*[contains(@class, "main-meta")]/span[1]/a/text()').extract_first(),
-            'tags': ','.join(response.xpath('//*[contains(@class, "main-tags")]/a/text()').extract()),
-        }
+        item = MzituItem()
+        item['tid'] = response.url.split('/')[3]
+        item['order'] = response.url.split('/')[4] if not is_default_page else '1'
+        item['img_url'] = response.xpath('//*[contains(@class, "main-image")]/p/a/img/@src').extract_first()
+        item['title'] = response.xpath('//h2[contains(@class, "main-title")]/text()').extract_first()
+        item['time'] = response.xpath('//*[contains(@class, "main-meta")]/span[2]/text()').extract_first()
+        item['category'] = response.xpath('//*[contains(@class, "main-meta")]/span[1]/a/text()').extract_first()
+        item['tags'] = ','.join(response.xpath('//*[contains(@class, "main-tags")]/a/text()').extract())
+        yield item
