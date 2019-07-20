@@ -24,7 +24,7 @@ class MzituSpider(scrapy.Spider):
 
         yield {
             'tid': response.url.split('/')[3],
-            'order': response.url.split('/')[4] if is_default_page else 0,
+            'order': response.url.split('/')[4] if not is_default_page else 1,
             'img_url': response.xpath('//*[contains(@class, "main-image")]/p/a/img/@src').extract_first(),
             'title': response.xpath('//h2[contains(@class, "main-title")]/text()').extract_first(),
             'time': response.xpath('//*[contains(@class, "main-meta")]/span[2]/text()').extract_first().replace('发布于 ',
