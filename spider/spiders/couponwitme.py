@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import scrapy
 
+
 class CouponwitmeSpider(scrapy.Spider):
-    name="couponwitme"
-    allow_domains=["couponwitme.com"]
+    name = "couponwitme"
+    allow_domains = ["couponwitme.com"]
     root_url = "https://www.couponwitme.com"
 
     def start_requests(self):
         urls = []
         for item in range(97, 122):
-            url = self.root_url + "/stores/"+ chr(item) + "/"
+            url = self.root_url + "/stores/" + chr(item) + "/"
             urls.append(url)
         urls.append(self.root_url + "/stores/other/")
 
@@ -27,7 +28,7 @@ class CouponwitmeSpider(scrapy.Spider):
             yield response.follow(url, self.parse_term)
 
     def parse_term(self, response):
-        #coupon list
+        # coupon list
         coupon_list = []
         for coupon_block in response.xpath('//ul[contains(@class, "c_list")]/li'):
             coupon = {
@@ -36,7 +37,8 @@ class CouponwitmeSpider(scrapy.Spider):
                 'description': coupon_block.xpath('.//div[contains(@class, "des")]/text()').extract_first(),
                 'code': coupon_block.xpath('.//div[contains(@class, "show_code")]/a/code/text()').extract_first(),
                 'dst_url': coupon_block.xpath('.//div[contains(@class, "show_code")]/a/@href').extract_first(),
-                'promo_detail': ' '.join(coupon_block.xpath('.//div[contains(@class, "promo_infor_center")]/span/text()').extract())
+                'promo_detail': ' '.join(
+                    coupon_block.xpath('.//div[contains(@class, "promo_infor_center")]/span/text()').extract())
             }
             coupon_list.append(coupon)
 
@@ -66,6 +68,7 @@ class CouponwitmeSpider(scrapy.Spider):
 
     def parse_all_category(self, response):
         for category_block in response.xpath('//*[contains(@class, "letter")]/ul').extract():
-            yield response.follow(category_block.xpath('.//div[contains(@class, "one_letter")]/a/@href'), self.parse_category)
+            yield response.follow(category_block.xpath('.//div[contains(@class, "one_letter")]/a/@href'),
+                                  self.parse_category)
             for url in category_block.xpath('.//li/a/@href').extract():
                 yield response.follow(url, self.parse_category)
